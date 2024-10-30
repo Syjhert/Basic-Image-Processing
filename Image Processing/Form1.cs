@@ -10,6 +10,7 @@ namespace Image_Processing
         Bitmap loaded, processed;
         Device[] devices;
         Bitmap b;
+
         bool webcamMode;
         enum filter
         {
@@ -17,7 +18,14 @@ namespace Image_Processing
             Gray,
             Inversion,
             Contrast,
-            Brightness
+            Brightness,
+            Rotate,
+            MirrorHorizontal,
+            MirrorVertical,
+            Histogram,
+            Scale,
+            Binary,
+            Sepia
         }
         filter webcamFilter;
         public Form1()
@@ -25,6 +33,36 @@ namespace Image_Processing
             InitializeComponent();
             webcamFilter = filter.None;
             webcamMode = false;
+
+            ToolStripMenuItem[] stretchMenuItems =
+            {
+                pixelCopyToolStripMenuItem,
+                greyscalingToolStripMenuItem,
+                inversionToolStripMenuItem,
+                mirrorHorizontalToolStripMenuItem,
+                mirrorVerticalToolStripMenuItem,
+                histogramToolStripMenuItem,
+                binaryToolStripMenuItem,
+                grayToolStripMenuItem,
+                inversionToolStripMenuItem1,
+                sepiaToolStripMenuItem,
+                mirrorHorizontalToolStripMenuItem1,
+                mirrorVerticalToolStripMenuItem1,
+                histogramToolStripMenuItem1,
+                scaleToolStripMenuItem1,
+                binaryToolStripMenuItem1,
+                sepiaToolStripMenuItem1
+            };
+
+            foreach (ToolStripMenuItem item in stretchMenuItems)
+            {
+                item.Click += stretchPictureBox;
+            }
+            loadBackgroundBtn.Click += stretchPictureBox;
+        }
+        private void stretchPictureBox(object sender, EventArgs e)
+        {
+            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -44,107 +82,41 @@ namespace Image_Processing
         }
         private void pixelCopyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            processed = new Bitmap(loaded.Width, loaded.Height);
-
-            Color pixel;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    processed.SetPixel(x, y, pixel);
-                }
-            }
+            BasicDIP.PixelCopy(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
-
-
         private void greyscalingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            //compressed color to 1 byte cuz we use the grey for the RGB
-            processed = new Bitmap(loaded.Width, loaded.Height);
-
-            Color pixel;
-            int average;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    average = (int)(pixel.R + pixel.G + pixel.B) / 3;
-                    Color grey = Color.FromArgb(average, average, average);
-                    processed.SetPixel(x, y, grey);
-                }
-            }
+            BasicDIP.Grayscaling(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void inversionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            //inverting an inverted image will get the original image
-            //used to see the darker sides of an image
-            processed = new Bitmap(loaded.Width, loaded.Height);
-
-            Color pixel;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    Color inverted = Color.FromArgb(
-                        255 - pixel.R, 255 - pixel.G, 255 - pixel.B
-                    );
-                    processed.SetPixel(x, y, inverted);
-                }
-            }
+            BasicDIP.Inversion(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorHorizontalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            processed = new Bitmap(loaded.Width, loaded.Height);
-
-            Color pixel;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    processed.SetPixel(loaded.Width - x - 1, y, pixel);
-                }
-            }
+            BasicDIP.MirrorHorizontal(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorVerticalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            processed = new Bitmap(loaded.Width, loaded.Height);
-
-            Color pixel;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    processed.SetPixel(x, loaded.Height - y - 1, pixel);
-                }
-            }
+            BasicDIP.MirrorVertical(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void histogramToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             BasicDIP.Hist(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
+        //Brightness
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             if (webcamMode)
@@ -154,7 +126,6 @@ namespace Image_Processing
             }
             else
             {
-                pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
                 BasicDIP.Brightness(loaded, ref processed, brightnessTrackBar.Value);
                 pictureBox2.Image = processed;
             }
@@ -169,18 +140,25 @@ namespace Image_Processing
             }
             else
             {
-                pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
                 BasicDIP.Equalisation(loaded, ref processed, contrastTrackBar.Value);
                 //System.Diagnostics.Debug.WriteLine(contrastTrackBar.Value);
                 pictureBox2.Image = processed;
             }
         }
 
+        //Rotation
         private void trackBar1_Scroll_1(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            BasicDIP.Rotate(loaded, ref processed, rotateTrackBar.Value);
-            pictureBox2.Image = processed;
+            if (webcamMode)
+            {
+                webcamFilter = filter.Rotate;
+                timer1.Enabled = true;
+            }
+            else
+            {
+                BasicDIP.Rotate(loaded, ref processed, rotateTrackBar.Value);
+                pictureBox2.Image = processed;
+            }
         }
 
         private void scaleToolStripMenuItem_Click(object sender, EventArgs e)
@@ -192,27 +170,15 @@ namespace Image_Processing
 
         private void binaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             processed = new Bitmap(loaded.Width, loaded.Height);
 
-            Color pixel;
-            int ave;
-            for (int x = 0; x < loaded.Width; x++)
-            {
-                for (int y = 0; y < loaded.Height; y++)
-                {
-                    pixel = loaded.GetPixel(x, y);
-                    ave = (int)(pixel.R + pixel.G + pixel.B) / 3;
-                    if (ave < 180)
-                    {
-                        processed.SetPixel(x, y, Color.Black);
-                    }
-                    else
-                    {
-                        processed.SetPixel(x, y, Color.White);
-                    }
-                }
-            }
+            BasicDIP.Binary(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void sepiaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            BasicDIP.Sepia(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
@@ -223,13 +189,17 @@ namespace Image_Processing
 
         private void onToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            devices[0].ShowWindow(pictureBox1);
+            if ( !webcamMode )
+                devices[0].ShowWindow(pictureBox1);
+            webcamMode = true;
         }
 
         private void offToolStripMenuItem_Click(object sender, EventArgs e)
         {
             devices[0].Stop();
             timer1.Enabled = false;
+            pictureBox1.Image = null;
+            webcamMode = false;
         }
 
         private void grayToolStripMenuItem_Click(object sender, EventArgs e)
@@ -242,6 +212,41 @@ namespace Image_Processing
             webcamFilter = filter.Inversion;
             timer1.Enabled = true;
         }
+        private void mirrorHorizontalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.MirrorHorizontal;
+            timer1.Enabled = true;
+        }
+
+        private void mirrorVerticalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.MirrorVertical;
+            timer1.Enabled = true;
+        }
+
+        private void histogramToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Histogram;
+            timer1.Enabled = true;
+        }
+
+        private void scaleToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Scale;
+            timer1.Enabled = true;
+        }
+
+        private void binaryToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Binary;
+            timer1.Enabled = true;
+        }
+
+        private void sepiaToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Sepia;
+            timer1.Enabled = true;
+        }
         private void timer1_Tick(object sender, EventArgs e)
         {
             // Implicit Data can be any type of data (object or primitive type)
@@ -252,6 +257,10 @@ namespace Image_Processing
             devices[0].Sendmessage();
             data = Clipboard.GetDataObject();
             bmap = (Image)data.GetData("System.Drawing.Bitmap", true);
+            if (bmap == null )
+            {
+                return;
+            }
             b = new Bitmap(bmap);
 
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -260,25 +269,96 @@ namespace Image_Processing
                 case filter.Gray:
                     ImageProcess2.BitmapFilter.GrayScale(b);
                     pictureBox2.Image = b;
-                    break;
+                    return;
                 case filter.Inversion:
                     ImageProcess2.BitmapFilter.Invert(b);
                     pictureBox2.Image = b;
-                    break;
+                    return;
                 case filter.Contrast:
                     BasicDIP.Equalisation(b, ref processed, contrastTrackBar.Value);
-                    pictureBox2.Image = processed;
                     break;
                 case filter.Brightness:
                     BasicDIP.Brightness(b, ref processed, brightnessTrackBar.Value);
-                    pictureBox2.Image = processed;
+                    break;
+                case filter.Rotate:
+                    BasicDIP.Rotate(b, ref processed, rotateTrackBar.Value);
+                    break;
+                case filter.MirrorHorizontal:
+                    BasicDIP.MirrorHorizontal(b, ref processed);
+                    break;
+                case filter.MirrorVertical:
+                    BasicDIP.MirrorVertical(b, ref processed);
+                    break;
+                case filter.Histogram:
+                    BasicDIP.Hist(b, ref processed);
+                    break;
+                case filter.Scale:
+                    BasicDIP.Scale(b, ref processed, 100, 100);
+                    pictureBox2.SizeMode = PictureBoxSizeMode.Normal;
+                    break;
+                case filter.Binary:
+                    BasicDIP.Binary(b, ref processed);
+                    break;
+                case filter.Sepia:
+                    BasicDIP.Sepia(b, ref processed);
                     break;
                 default:
                     break;
             }
+            pictureBox2.Image = processed;
 
         }
 
-        
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+            {
+                loaded = new Bitmap(openFileDialog2.FileName);
+                pictureBox1.Image = loaded;
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog3.ShowDialog() == DialogResult.OK)
+            {
+                processed = new Bitmap(openFileDialog3.FileName);
+                pictureBox2.Image = processed;
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Bitmap image = new Bitmap(pictureBox1.Image);
+            Bitmap background = new Bitmap(pictureBox2.Image);
+            Bitmap result = new Bitmap(background.Width, background.Height);
+            Color green = Color.FromArgb(0, 255, 0);
+            int greygreen = (green.R + green.G + green.B) / 3;
+            int threshold = 5;
+            for (int x = 0; x < background.Width; x++)
+            {
+                for (int y = 0; y < background.Height; y++)
+                {
+                    Color pixel = image.GetPixel(x, y);
+                    Color backpixel = background.GetPixel(x, y);
+                    int grey = (pixel.R + pixel.G + pixel.B) / 3;
+                    int subtractValue = Math.Abs(grey - greygreen);
+
+                    if (subtractValue > threshold)
+                        result.SetPixel(x, y, pixel);
+                    else
+                        result.SetPixel(x, y, backpixel);
+                }
+            }
+            pictureBox3.Image = result;
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            if (pictureBox3.Image != null && saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                pictureBox3.Image.Save(saveFileDialog1.FileName);
+            }
+        }
     }
 }

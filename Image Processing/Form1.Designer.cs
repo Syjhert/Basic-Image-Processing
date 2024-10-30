@@ -42,11 +42,18 @@
             histogramToolStripMenuItem = new ToolStripMenuItem();
             scaleToolStripMenuItem = new ToolStripMenuItem();
             binaryToolStripMenuItem = new ToolStripMenuItem();
+            sepiaToolStripMenuItem = new ToolStripMenuItem();
             onToolStripMenuItem = new ToolStripMenuItem();
             offToolStripMenuItem = new ToolStripMenuItem();
             vIDEOToolStripMenuItem = new ToolStripMenuItem();
             grayToolStripMenuItem = new ToolStripMenuItem();
             inversionToolStripMenuItem1 = new ToolStripMenuItem();
+            mirrorHorizontalToolStripMenuItem1 = new ToolStripMenuItem();
+            mirrorVerticalToolStripMenuItem1 = new ToolStripMenuItem();
+            histogramToolStripMenuItem1 = new ToolStripMenuItem();
+            scaleToolStripMenuItem1 = new ToolStripMenuItem();
+            binaryToolStripMenuItem1 = new ToolStripMenuItem();
+            sepiaToolStripMenuItem1 = new ToolStripMenuItem();
             openFileDialog1 = new OpenFileDialog();
             saveFileDialog1 = new SaveFileDialog();
             pictureBox1 = new PictureBox();
@@ -58,12 +65,24 @@
             rotateTrackBar = new TrackBar();
             label3 = new Label();
             timer1 = new System.Windows.Forms.Timer(components);
+            pictureBox3 = new PictureBox();
+            loadImageBtn = new Button();
+            loadBackgroundBtn = new Button();
+            subtractBtn = new Button();
+            openFileDialog2 = new OpenFileDialog();
+            openFileDialog3 = new OpenFileDialog();
+            button1 = new Button();
+            saveFileDialog2 = new SaveFileDialog();
+            label4 = new Label();
+            label5 = new Label();
+            label6 = new Label();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)brightnessTrackBar).BeginInit();
             ((System.ComponentModel.ISupportInitialize)contrastTrackBar).BeginInit();
             ((System.ComponentModel.ISupportInitialize)rotateTrackBar).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             SuspendLayout();
             // 
             // menuStrip1
@@ -72,7 +91,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, dIPToolStripMenuItem, onToolStripMenuItem, offToolStripMenuItem, vIDEOToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(801, 28);
+            menuStrip1.Size = new Size(1327, 28);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -99,7 +118,7 @@
             // 
             // dIPToolStripMenuItem
             // 
-            dIPToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { pixelCopyToolStripMenuItem, greyscalingToolStripMenuItem, inversionToolStripMenuItem, mirrorHorizontalToolStripMenuItem, mirrorVerticalToolStripMenuItem, histogramToolStripMenuItem, scaleToolStripMenuItem, binaryToolStripMenuItem });
+            dIPToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { pixelCopyToolStripMenuItem, greyscalingToolStripMenuItem, inversionToolStripMenuItem, mirrorHorizontalToolStripMenuItem, mirrorVerticalToolStripMenuItem, histogramToolStripMenuItem, scaleToolStripMenuItem, binaryToolStripMenuItem, sepiaToolStripMenuItem });
             dIPToolStripMenuItem.Name = "dIPToolStripMenuItem";
             dIPToolStripMenuItem.Size = new Size(46, 24);
             dIPToolStripMenuItem.Text = "DIP";
@@ -160,6 +179,13 @@
             binaryToolStripMenuItem.Text = "Binary";
             binaryToolStripMenuItem.Click += binaryToolStripMenuItem_Click;
             // 
+            // sepiaToolStripMenuItem
+            // 
+            sepiaToolStripMenuItem.Name = "sepiaToolStripMenuItem";
+            sepiaToolStripMenuItem.Size = new Size(224, 26);
+            sepiaToolStripMenuItem.Text = "Sepia";
+            sepiaToolStripMenuItem.Click += sepiaToolStripMenuItem_Click;
+            // 
             // onToolStripMenuItem
             // 
             onToolStripMenuItem.Name = "onToolStripMenuItem";
@@ -176,7 +202,7 @@
             // 
             // vIDEOToolStripMenuItem
             // 
-            vIDEOToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { grayToolStripMenuItem, inversionToolStripMenuItem1 });
+            vIDEOToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { grayToolStripMenuItem, inversionToolStripMenuItem1, mirrorHorizontalToolStripMenuItem1, mirrorVerticalToolStripMenuItem1, histogramToolStripMenuItem1, scaleToolStripMenuItem1, binaryToolStripMenuItem1, sepiaToolStripMenuItem1 });
             vIDEOToolStripMenuItem.Name = "vIDEOToolStripMenuItem";
             vIDEOToolStripMenuItem.Size = new Size(66, 24);
             vIDEOToolStripMenuItem.Text = "VIDEO";
@@ -195,6 +221,48 @@
             inversionToolStripMenuItem1.Text = "Inversion";
             inversionToolStripMenuItem1.Click += inversionToolStripMenuItem1_Click;
             // 
+            // mirrorHorizontalToolStripMenuItem1
+            // 
+            mirrorHorizontalToolStripMenuItem1.Name = "mirrorHorizontalToolStripMenuItem1";
+            mirrorHorizontalToolStripMenuItem1.Size = new Size(224, 26);
+            mirrorHorizontalToolStripMenuItem1.Text = "Mirror Horizontal";
+            mirrorHorizontalToolStripMenuItem1.Click += mirrorHorizontalToolStripMenuItem1_Click;
+            // 
+            // mirrorVerticalToolStripMenuItem1
+            // 
+            mirrorVerticalToolStripMenuItem1.Name = "mirrorVerticalToolStripMenuItem1";
+            mirrorVerticalToolStripMenuItem1.Size = new Size(224, 26);
+            mirrorVerticalToolStripMenuItem1.Text = "Mirror Vertical";
+            mirrorVerticalToolStripMenuItem1.Click += mirrorVerticalToolStripMenuItem1_Click;
+            // 
+            // histogramToolStripMenuItem1
+            // 
+            histogramToolStripMenuItem1.Name = "histogramToolStripMenuItem1";
+            histogramToolStripMenuItem1.Size = new Size(224, 26);
+            histogramToolStripMenuItem1.Text = "Histogram";
+            histogramToolStripMenuItem1.Click += histogramToolStripMenuItem1_Click;
+            // 
+            // scaleToolStripMenuItem1
+            // 
+            scaleToolStripMenuItem1.Name = "scaleToolStripMenuItem1";
+            scaleToolStripMenuItem1.Size = new Size(224, 26);
+            scaleToolStripMenuItem1.Text = "Scale";
+            scaleToolStripMenuItem1.Click += scaleToolStripMenuItem1_Click;
+            // 
+            // binaryToolStripMenuItem1
+            // 
+            binaryToolStripMenuItem1.Name = "binaryToolStripMenuItem1";
+            binaryToolStripMenuItem1.Size = new Size(224, 26);
+            binaryToolStripMenuItem1.Text = "Binary";
+            binaryToolStripMenuItem1.Click += binaryToolStripMenuItem1_Click;
+            // 
+            // sepiaToolStripMenuItem1
+            // 
+            sepiaToolStripMenuItem1.Name = "sepiaToolStripMenuItem1";
+            sepiaToolStripMenuItem1.Size = new Size(224, 26);
+            sepiaToolStripMenuItem1.Text = "Sepia";
+            sepiaToolStripMenuItem1.Click += sepiaToolStripMenuItem1_Click;
+            // 
             // openFileDialog1
             // 
             openFileDialog1.FileName = "openFileDialog1";
@@ -203,23 +271,23 @@
             // 
             pictureBox1.Location = new Point(12, 169);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(367, 393);
+            pictureBox1.Size = new Size(422, 393);
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 1;
             pictureBox1.TabStop = false;
             // 
             // pictureBox2
             // 
-            pictureBox2.Location = new Point(411, 169);
+            pictureBox2.Location = new Point(452, 169);
             pictureBox2.Name = "pictureBox2";
-            pictureBox2.Size = new Size(367, 393);
+            pictureBox2.Size = new Size(422, 393);
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.TabIndex = 2;
             pictureBox2.TabStop = false;
             // 
             // brightnessTrackBar
             // 
-            brightnessTrackBar.Location = new Point(452, 31);
+            brightnessTrackBar.Location = new Point(380, 31);
             brightnessTrackBar.Maximum = 50;
             brightnessTrackBar.Minimum = -50;
             brightnessTrackBar.Name = "brightnessTrackBar";
@@ -250,7 +318,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(565, 70);
+            label2.Location = new Point(493, 70);
             label2.Name = "label2";
             label2.Size = new Size(77, 20);
             label2.TabIndex = 6;
@@ -258,7 +326,7 @@
             // 
             // rotateTrackBar
             // 
-            rotateTrackBar.Location = new Point(245, 93);
+            rotateTrackBar.Location = new Point(701, 31);
             rotateTrackBar.Maximum = 360;
             rotateTrackBar.Minimum = -360;
             rotateTrackBar.Name = "rotateTrackBar";
@@ -269,7 +337,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(371, 129);
+            label3.Location = new Point(827, 67);
             label3.Name = "label3";
             label3.Size = new Size(53, 20);
             label3.TabIndex = 8;
@@ -280,11 +348,103 @@
             timer1.Interval = 10;
             timer1.Tick += timer1_Tick;
             // 
+            // pictureBox3
+            // 
+            pictureBox3.Location = new Point(893, 169);
+            pictureBox3.Name = "pictureBox3";
+            pictureBox3.Size = new Size(422, 393);
+            pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox3.TabIndex = 9;
+            pictureBox3.TabStop = false;
+            // 
+            // loadImageBtn
+            // 
+            loadImageBtn.Location = new Point(154, 586);
+            loadImageBtn.Name = "loadImageBtn";
+            loadImageBtn.Size = new Size(125, 42);
+            loadImageBtn.TabIndex = 10;
+            loadImageBtn.Text = "Load image";
+            loadImageBtn.UseVisualStyleBackColor = true;
+            loadImageBtn.Click += button1_Click;
+            // 
+            // loadBackgroundBtn
+            // 
+            loadBackgroundBtn.Location = new Point(594, 586);
+            loadBackgroundBtn.Name = "loadBackgroundBtn";
+            loadBackgroundBtn.Size = new Size(136, 43);
+            loadBackgroundBtn.TabIndex = 11;
+            loadBackgroundBtn.Text = "Load background";
+            loadBackgroundBtn.UseVisualStyleBackColor = true;
+            loadBackgroundBtn.Click += button2_Click;
+            // 
+            // subtractBtn
+            // 
+            subtractBtn.Location = new Point(987, 586);
+            subtractBtn.Name = "subtractBtn";
+            subtractBtn.Size = new Size(113, 36);
+            subtractBtn.TabIndex = 12;
+            subtractBtn.Text = "Subtract";
+            subtractBtn.UseVisualStyleBackColor = true;
+            subtractBtn.Click += button3_Click;
+            // 
+            // openFileDialog2
+            // 
+            openFileDialog2.FileName = "openFileDialog2";
+            // 
+            // openFileDialog3
+            // 
+            openFileDialog3.FileName = "openFileDialog3";
+            // 
+            // button1
+            // 
+            button1.Location = new Point(1125, 586);
+            button1.Name = "button1";
+            button1.Size = new Size(133, 36);
+            button1.TabIndex = 13;
+            button1.Text = "Save New Image";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click_1;
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(41, 133);
+            label4.Name = "label4";
+            label4.Size = new Size(360, 20);
+            label4.TabIndex = 14;
+            label4.Text = "Loaded Reference / Green screen image(Subtraction)";
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(493, 133);
+            label5.Name = "label5";
+            label5.Size = new Size(348, 20);
+            label5.TabIndex = 15;
+            label5.Text = "Processed Result / Background Image (Subtraction)";
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(1045, 133);
+            label6.Name = "label6";
+            label6.Size = new Size(129, 20);
+            label6.TabIndex = 16;
+            label6.Text = "Subtraction Result";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(801, 618);
+            ClientSize = new Size(1327, 637);
+            Controls.Add(label6);
+            Controls.Add(label5);
+            Controls.Add(label4);
+            Controls.Add(button1);
+            Controls.Add(subtractBtn);
+            Controls.Add(loadBackgroundBtn);
+            Controls.Add(loadImageBtn);
+            Controls.Add(pictureBox3);
             Controls.Add(label3);
             Controls.Add(rotateTrackBar);
             Controls.Add(label2);
@@ -305,6 +465,7 @@
             ((System.ComponentModel.ISupportInitialize)brightnessTrackBar).EndInit();
             ((System.ComponentModel.ISupportInitialize)contrastTrackBar).EndInit();
             ((System.ComponentModel.ISupportInitialize)rotateTrackBar).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -340,5 +501,23 @@
         private ToolStripMenuItem grayToolStripMenuItem;
         private System.Windows.Forms.Timer timer1;
         private ToolStripMenuItem inversionToolStripMenuItem1;
+        private ToolStripMenuItem sepiaToolStripMenuItem;
+        private PictureBox pictureBox3;
+        private Button loadImageBtn;
+        private Button loadBackgroundBtn;
+        private Button subtractBtn;
+        private OpenFileDialog openFileDialog2;
+        private OpenFileDialog openFileDialog3;
+        private Button button1;
+        private SaveFileDialog saveFileDialog2;
+        private ToolStripMenuItem mirrorHorizontalToolStripMenuItem1;
+        private ToolStripMenuItem mirrorVerticalToolStripMenuItem1;
+        private ToolStripMenuItem histogramToolStripMenuItem1;
+        private ToolStripMenuItem scaleToolStripMenuItem1;
+        private ToolStripMenuItem binaryToolStripMenuItem1;
+        private ToolStripMenuItem sepiaToolStripMenuItem1;
+        private Label label4;
+        private Label label5;
+        private Label label6;
     }
 }

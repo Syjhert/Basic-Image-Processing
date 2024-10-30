@@ -9,34 +9,115 @@ namespace Image_Processing
 {
     static class BasicDIP
     {
-        public static void Hist(Bitmap a, ref Bitmap b)
+        public static void PixelCopy(Bitmap reference, ref Bitmap result)
+        {
+            result = new Bitmap(reference.Width, reference.Height);
+
+            Color pixel;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    result.SetPixel(x, y, pixel);
+                }
+            }
+        }
+        public static void Grayscaling(Bitmap reference, ref Bitmap result)
+        {
+            //compressed color to 1 byte cuz we use the grey for the RGB
+            result = new Bitmap(reference.Width, reference.Height);
+
+            Color pixel;
+            int average;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    average = (int)(pixel.R + pixel.G + pixel.B) / 3;
+                    Color grey = Color.FromArgb(average, average, average);
+                    result.SetPixel(x, y, grey);
+                }
+            }
+        }
+        public static void Inversion(Bitmap reference, ref Bitmap result)
+        {
+            //inverting an inverted image will get the original image
+            //used to see the darker sides of an image
+            result = new Bitmap(reference.Width, reference.Height);
+
+            Color pixel;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    Color inverted = Color.FromArgb(
+                        255 - pixel.R, 255 - pixel.G, 255 - pixel.B
+                    );
+                    result.SetPixel(x, y, inverted);
+                }
+            }
+        }
+        public static void MirrorHorizontal(Bitmap reference, ref Bitmap result)
+        {
+            result = new Bitmap(reference.Width, reference.Height);
+
+            Color pixel;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    result.SetPixel(reference.Width - x - 1, y, pixel);
+                }
+            }
+        }
+
+        public static void MirrorVertical(Bitmap reference, ref Bitmap result)
+        {
+            result = new Bitmap(reference.Width, reference.Height);
+
+            Color pixel;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    result.SetPixel(x, reference.Height - y - 1, pixel);
+                }
+            }
+        }
+        public static void Hist(Bitmap reference, ref Bitmap result)
         {
             Color sample;
             Color gray;
             Byte graydata;
             int[] histtdata = new int[256];
-            for (int x = 0; x < a.Width; x++)
+            for (int x = 0; x < reference.Width; x++)
             {
-                for (int y = 0; y < a.Height; y++)
+                for (int y = 0; y < reference.Height; y++)
                 {
-                    sample = a.GetPixel(x, y);
+                    sample = reference.GetPixel(x, y);
                     graydata = (byte)((sample.R + sample.G + sample.B) / 3);
                     histtdata[graydata]++;
                 }
             }
-            b = new Bitmap(256, 800);
+
+            result = new Bitmap(256, 800);
             for (int x = 0; x < 256; x++)
             {
                 for (int y = 0; y < 800; y++)
                 {
-                    b.SetPixel(x, y, Color.White);
+                    result.SetPixel(x, y, Color.White);
                 }
             }
             for (int x = 0; x < 256; x++)
             {
-                for (int y = 0; y < Math.Min(histtdata[x] / 5, b.Height - 1); y++)
+                for (int y = 0; y < Math.Min(histtdata[x] / 5, result.Height - 1); y++)
                 {
-                    b.SetPixel(x, (b.Height - 1) - y, Color.Black);
+                    result.SetPixel(x, (result.Height - 1) - y, Color.Black);
                 }
             }
         }
@@ -150,6 +231,48 @@ namespace Image_Processing
                     xSource = xTarget * width / targetWidth;
                     ySource = yTarget * height / targetHeight;
                     b.SetPixel(xTarget, yTarget, a.GetPixel(xSource, ySource));
+                }
+            }
+        }
+
+        public static void Binary(Bitmap reference, ref Bitmap result)
+        {
+            result = new Bitmap(reference.Width, reference.Height);
+            Color pixel;
+            int ave;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    ave = (int)(pixel.R + pixel.G + pixel.B) / 3;
+                    if (ave < 180)
+                    {
+                        result.SetPixel(x, y, Color.Black);
+                    }
+                    else
+                    {
+                        result.SetPixel(x, y, Color.White);
+                    }
+                }
+            }
+        }
+
+        public static void Sepia(Bitmap reference, ref Bitmap result)
+        {
+            result = new Bitmap(reference.Width, reference.Height);
+            Color pixel;
+            int tr, tg, tb;
+            for (int x = 0; x < reference.Width; x++)
+            {
+                for (int y = 0; y < reference.Height; y++)
+                {
+                    pixel = reference.GetPixel(x, y);
+                    tr = (int)((pixel.R * .393) + (pixel.G * .769) + (pixel.B * .189));
+                    tg = (int)((pixel.R * .349) + (pixel.G * .686) + (pixel.B * .168));
+                    tb = (int)((pixel.R * .272) + (pixel.G * .534) + (pixel.B * .131));
+                    Color color = Color.FromArgb(Math.Min(tr, 255), Math.Min(tg, 255), Math.Min(tb, 255));
+                    result.SetPixel(x, y, color);
                 }
             }
         }
