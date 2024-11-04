@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using WebCamLib;
 using ImageProcess2;
+using System.CodeDom;
 
 namespace Image_Processing
 {
@@ -25,7 +26,8 @@ namespace Image_Processing
             Histogram,
             Scale,
             Binary,
-            Sepia
+            Sepia,
+            Subtract
         }
         filter webcamFilter;
         public Form1()
@@ -43,9 +45,9 @@ namespace Image_Processing
                 mirrorVerticalToolStripMenuItem,
                 histogramToolStripMenuItem,
                 binaryToolStripMenuItem,
+                sepiaToolStripMenuItem,
                 grayToolStripMenuItem,
                 inversionToolStripMenuItem1,
-                sepiaToolStripMenuItem,
                 mirrorHorizontalToolStripMenuItem1,
                 mirrorVerticalToolStripMenuItem1,
                 histogramToolStripMenuItem1,
@@ -59,11 +61,34 @@ namespace Image_Processing
                 item.Click += stretchPictureBox;
             }
             loadBackgroundBtn.Click += stretchPictureBox;
+
+            ToolStripMenuItem[] nonContinuousFilters =
+            {
+                pixelCopyToolStripMenuItem,
+                greyscalingToolStripMenuItem,
+                inversionToolStripMenuItem,
+                mirrorHorizontalToolStripMenuItem,
+                mirrorVerticalToolStripMenuItem,
+                histogramToolStripMenuItem,
+                scaleToolStripMenuItem,
+                binaryToolStripMenuItem,
+                sepiaToolStripMenuItem
+            };
+            foreach (ToolStripMenuItem item in nonContinuousFilters)
+            {
+                item.Click += turnOffTimer;
+            }
         }
+        // Event listener functions
         private void stretchPictureBox(object sender, EventArgs e)
         {
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
         }
+        private void turnOffTimer(object sender, EventArgs e)
+        {
+            timer1.Enabled = false;
+        }
+        //-----------
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -75,6 +100,10 @@ namespace Image_Processing
         }
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                processed = new Bitmap(pictureBox2.Image);
+            }
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 processed.Save(saveFileDialog1.FileName);
@@ -82,36 +111,60 @@ namespace Image_Processing
         }
         private void pixelCopyToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.PixelCopy(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void greyscalingToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.Grayscaling(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void inversionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.Inversion(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorHorizontalToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.MirrorHorizontal(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorVerticalToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.MirrorVertical(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void histogramToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.Hist(loaded, ref processed);
             pictureBox2.Image = processed;
         }
@@ -163,6 +216,10 @@ namespace Image_Processing
 
         private void scaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             pictureBox2.SizeMode = PictureBoxSizeMode.Normal;
             BasicDIP.Scale(loaded, ref processed, 200, 200);
             pictureBox2.Image = processed;
@@ -170,6 +227,10 @@ namespace Image_Processing
 
         private void binaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             processed = new Bitmap(loaded.Width, loaded.Height);
 
             BasicDIP.Binary(loaded, ref processed);
@@ -178,6 +239,10 @@ namespace Image_Processing
 
         private void sepiaToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                loaded = getOneFrame();
+            }
             BasicDIP.Sepia(loaded, ref processed);
             pictureBox2.Image = processed;
         }
@@ -189,12 +254,17 @@ namespace Image_Processing
 
         private void onToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if ( !webcamMode )
+            if (!webcamMode)
                 devices[0].ShowWindow(pictureBox1);
             webcamMode = true;
         }
 
         private void offToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            turnOffCameraMode();
+        }
+
+        private void turnOffCameraMode()
         {
             devices[0].Stop();
             timer1.Enabled = false;
@@ -249,19 +319,9 @@ namespace Image_Processing
         }
         private void timer1_Tick(object sender, EventArgs e)
         {
-            // Implicit Data can be any type of data (object or primitive type)
-            IDataObject data;
-            Image bmap;
-
-            // Get 1 Frame from the Webcam
-            devices[0].Sendmessage();
-            data = Clipboard.GetDataObject();
-            bmap = (Image)data.GetData("System.Drawing.Bitmap", true);
-            if (bmap == null )
-            {
+            b = getOneFrame();
+            if (b == null)
                 return;
-            }
-            b = new Bitmap(bmap);
 
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             switch (webcamFilter)
@@ -293,7 +353,7 @@ namespace Image_Processing
                     BasicDIP.Hist(b, ref processed);
                     break;
                 case filter.Scale:
-                    BasicDIP.Scale(b, ref processed, 100, 100);
+                    BasicDIP.Scale(b, ref processed, 200, 200);
                     pictureBox2.SizeMode = PictureBoxSizeMode.Normal;
                     break;
                 case filter.Binary:
@@ -302,6 +362,12 @@ namespace Image_Processing
                 case filter.Sepia:
                     BasicDIP.Sepia(b, ref processed);
                     break;
+                case filter.Subtract:
+                    Bitmap background = new Bitmap(pictureBox2.Image);
+                    Bitmap result = new Bitmap(background.Width, background.Height);
+                    BasicDIP.Subtract(b, background, ref result);
+                    pictureBox3.Image = result;
+                    return;
                 default:
                     break;
             }
@@ -309,8 +375,30 @@ namespace Image_Processing
 
         }
 
+        private Bitmap getOneFrame()
+        {
+            // Implicit Data can be any type of data (object or primitive type)
+            IDataObject data;
+            Image bmap;
+
+            // Get 1 Frame from the Webcam
+            devices[0].Sendmessage();
+            data = Clipboard.GetDataObject();
+            bmap = (Image)data.GetData("System.Drawing.Bitmap", true);
+            if (bmap == null)
+            {
+                return null;
+            }
+            return new Bitmap(bmap);
+        }
+
+        //Open file to picturebox1
         private void button1_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                turnOffCameraMode();
+            }
             if (openFileDialog2.ShowDialog() == DialogResult.OK)
             {
                 loaded = new Bitmap(openFileDialog2.FileName);
@@ -318,8 +406,10 @@ namespace Image_Processing
             }
         }
 
+        //Open file to picturebox1
         private void button2_Click(object sender, EventArgs e)
         {
+            timer1.Enabled = false;
             if (openFileDialog3.ShowDialog() == DialogResult.OK)
             {
                 processed = new Bitmap(openFileDialog3.FileName);
@@ -327,37 +417,35 @@ namespace Image_Processing
             }
         }
 
+        //Subtract button
         private void button3_Click(object sender, EventArgs e)
         {
+            if (webcamMode)
+            {
+                webcamFilter = filter.Subtract;
+                timer1.Enabled = true;
+                return;
+            }
             Bitmap image = new Bitmap(pictureBox1.Image);
             Bitmap background = new Bitmap(pictureBox2.Image);
             Bitmap result = new Bitmap(background.Width, background.Height);
-            Color green = Color.FromArgb(0, 255, 0);
-            int greygreen = (green.R + green.G + green.B) / 3;
-            int threshold = 5;
-            for (int x = 0; x < background.Width; x++)
-            {
-                for (int y = 0; y < background.Height; y++)
-                {
-                    Color pixel = image.GetPixel(x, y);
-                    Color backpixel = background.GetPixel(x, y);
-                    int grey = (pixel.R + pixel.G + pixel.B) / 3;
-                    int subtractValue = Math.Abs(grey - greygreen);
-
-                    if (subtractValue > threshold)
-                        result.SetPixel(x, y, pixel);
-                    else
-                        result.SetPixel(x, y, backpixel);
-                }
-            }
+            BasicDIP.Subtract(image, background, ref result);
             pictureBox3.Image = result;
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            if (pictureBox3.Image != null && saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (pictureBox3.Image != null && saveFileDialog2.ShowDialog() == DialogResult.OK)
             {
-                pictureBox3.Image.Save(saveFileDialog1.FileName);
+                pictureBox3.Image.Save(saveFileDialog2.FileName);
+            }
+        }
+
+        private void savePicture2Btn_Click(object sender, EventArgs e)
+        {
+            if (pictureBox2.Image != null && saveFileDialog3.ShowDialog() == DialogResult.OK)
+            {
+                pictureBox2.Image.Save(saveFileDialog3.FileName);
             }
         }
     }

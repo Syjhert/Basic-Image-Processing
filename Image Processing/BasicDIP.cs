@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Image_Processing
 {
@@ -273,6 +274,30 @@ namespace Image_Processing
                     tb = (int)((pixel.R * .272) + (pixel.G * .534) + (pixel.B * .131));
                     Color color = Color.FromArgb(Math.Min(tr, 255), Math.Min(tg, 255), Math.Min(tb, 255));
                     result.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        public static void Subtract(Bitmap image, Bitmap background, ref Bitmap result)
+        {
+            //change greenscreen color
+            Color green = Color.FromArgb(0, 255, 0);
+
+            int greygreen = (green.R + green.G + green.B) / 3;
+            int threshold = 5;
+            for (int x = 0; x < background.Width; x++)
+            {
+                for (int y = 0; y < background.Height; y++)
+                {
+                    Color pixel = image.GetPixel(x, y);
+                    Color backpixel = background.GetPixel(x, y);
+                    int grey = (pixel.R + pixel.G + pixel.B) / 3;
+                    int subtractValue = Math.Abs(grey - greygreen);
+
+                    if (subtractValue > threshold)
+                        result.SetPixel(x, y, pixel);
+                    else
+                        result.SetPixel(x, y, backpixel);
                 }
             }
         }
