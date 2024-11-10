@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using WebCamLib;
 using ImageProcess2;
 using System.CodeDom;
+using AForge.Video;
+using AForge.Video.DirectShow;
 
 namespace Image_Processing
 {
@@ -12,7 +14,11 @@ namespace Image_Processing
         Device[] devices;
         Bitmap b;
 
-        bool webcamMode;
+        //AForge
+        private FilterInfoCollection videoDevices;   // List of available video devices
+        private VideoCaptureDevice videoSource;
+
+        int webcamMode;
         enum filter
         {
             None,
@@ -27,14 +33,24 @@ namespace Image_Processing
             Scale,
             Binary,
             Sepia,
-            Subtract
+            Subtract,
+            Smoothing,
+            GaussianBlur,
+            Sharpen,
+            MeanRemoval,
+            EmbossLaplascian,
+            EmbossHoriVerti,
+            EmbossAllDirection,
+            EmbossLossy,
+            EmbossHorizontal,
+            EmbossVertical
         }
         filter webcamFilter;
         public Form1()
         {
             InitializeComponent();
             webcamFilter = filter.None;
-            webcamMode = false;
+            webcamMode = 0;
 
             ToolStripMenuItem[] stretchMenuItems =
             {
@@ -72,13 +88,41 @@ namespace Image_Processing
                 histogramToolStripMenuItem,
                 scaleToolStripMenuItem,
                 binaryToolStripMenuItem,
-                sepiaToolStripMenuItem
+                sepiaToolStripMenuItem,
+                smoothingToolStripMenuItem,
+                gaussianBlurToolStripMenuItem,
+                sharpenToolStripMenuItem,
+                meanRemovalToolStripMenuItem,
+                embossToolStripMenuItem,
+                laplascianToolStripMenuItem,
+                horizontalVerticalToolStripMenuItem,
+                allDirectionsToolStripMenuItem,
+                lossyToolStripMenuItem1,
+                horizontalToolStripMenuItem1,
+                verticalToolStripMenuItem1
             };
             foreach (ToolStripMenuItem item in nonContinuousFilters)
             {
                 item.Click += turnOffTimer;
             }
+
+            // AForge
+            videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            Debug.WriteLine("DEVICES:  ");
+            foreach (FilterInfo device in videoDevices)
+                Debug.WriteLine($"Device [{device.Name}]");
+
+            if (videoDevices.Count == 0)
+            {
+                MessageBox.Show("No video devices found.");
+            }
+            this.FormClosing += new FormClosingEventHandler(Form_Closing);
         }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            devices = DeviceManager.GetAllDevices();
+        }
+
         // Event listener functions
         private void stretchPictureBox(object sender, EventArgs e)
         {
@@ -87,6 +131,15 @@ namespace Image_Processing
         private void turnOffTimer(object sender, EventArgs e)
         {
             timer1.Enabled = false;
+        }
+        private void Video_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            Bitmap frame = (Bitmap)eventArgs.Frame.Clone();
+            pictureBox1.Image = frame; // Display the frame in pictureBox1
+        }
+        private void Form_Closing(object sender, FormClosingEventArgs e)
+        {
+            turnOffCameraMode();
         }
         //-----------
 
@@ -100,7 +153,7 @@ namespace Image_Processing
         }
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 processed = new Bitmap(pictureBox2.Image);
             }
@@ -111,60 +164,66 @@ namespace Image_Processing
         }
         private void pixelCopyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.PixelCopy(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void greyscalingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.Grayscaling(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void inversionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.Inversion(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorHorizontalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.MirrorHorizontal(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void mirrorVerticalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.MirrorVertical(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
         private void histogramToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.Hist(loaded, ref processed);
             pictureBox2.Image = processed;
         }
@@ -172,12 +231,12 @@ namespace Image_Processing
         //Brightness
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 webcamFilter = filter.Brightness;
                 timer1.Enabled = true;
             }
-            else
+            else if (loaded != null)
             {
                 BasicDIP.Brightness(loaded, ref processed, brightnessTrackBar.Value);
                 pictureBox2.Image = processed;
@@ -186,12 +245,12 @@ namespace Image_Processing
 
         private void contrastTrackBar_Scroll(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 webcamFilter = filter.Contrast;
                 timer1.Enabled = true;
             }
-            else
+            else if (loaded != null)
             {
                 BasicDIP.Equalisation(loaded, ref processed, contrastTrackBar.Value);
                 //System.Diagnostics.Debug.WriteLine(contrastTrackBar.Value);
@@ -202,12 +261,12 @@ namespace Image_Processing
         //Rotation
         private void trackBar1_Scroll_1(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 webcamFilter = filter.Rotate;
                 timer1.Enabled = true;
             }
-            else
+            else if (loaded != null)
             {
                 BasicDIP.Rotate(loaded, ref processed, rotateTrackBar.Value);
                 pictureBox2.Image = processed;
@@ -216,10 +275,11 @@ namespace Image_Processing
 
         private void scaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             pictureBox2.SizeMode = PictureBoxSizeMode.Normal;
             BasicDIP.Scale(loaded, ref processed, 200, 200);
             pictureBox2.Image = processed;
@@ -227,10 +287,11 @@ namespace Image_Processing
 
         private void binaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             processed = new Bitmap(loaded.Width, loaded.Height);
 
             BasicDIP.Binary(loaded, ref processed);
@@ -239,37 +300,191 @@ namespace Image_Processing
 
         private void sepiaToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
-            {
+            if (webcamMode != 0)
                 loaded = getOneFrame();
-            }
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
             BasicDIP.Sepia(loaded, ref processed);
             pictureBox2.Image = processed;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void smoothingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            devices = DeviceManager.GetAllDevices();
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.Smoothing(loaded, ref processed);
+            pictureBox2.Image = processed;
         }
 
-        private void onToolStripMenuItem_Click(object sender, EventArgs e)
+        private void gaussianBlurToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!webcamMode)
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.GaussianBlur(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void sharpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.Sharpen(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void meanRemovalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.MeanRemoval(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+        private void laplascianToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossLaplascian(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void horizontalVerticalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossHoriVerti(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void allDirectionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossAllDirections(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void lossyToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossLossy(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void horizontalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossHorizontal(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        private void verticalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 0)
+                loaded = getOneFrame();
+            else if (loaded == null)    //normal picture mode and no image is loaded yet
+                return;
+
+            BasicDIP.EmbossVertical(loaded, ref processed);
+            pictureBox2.Image = processed;
+        }
+
+        //Turn on webcam using the Device.cs library given by sir
+        private void devicecsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (webcamMode != 1)
+            {
+                turnOffCameraMode();
                 devices[0].ShowWindow(pictureBox1);
-            webcamMode = true;
+            }
+            webcamMode = 1;
         }
-
-        private void offToolStripMenuItem_Click(object sender, EventArgs e)
+        //AForge camera
+        private void turnOnAForgeDevice(int deviceId)
         {
             turnOffCameraMode();
+            if (videoDevices.Count >= deviceId + 1)
+            {
+                //first device
+                var filterInfo = videoDevices[deviceId];
+                Debug.WriteLine($"Connecting to [{filterInfo.Name}]...");
+                videoSource = new VideoCaptureDevice(filterInfo.MonikerString);
+
+                videoSource.NewFrame += new NewFrameEventHandler(Video_NewFrame);
+                videoSource.Start();
+
+                webcamMode = 2;
+            }
+            else
+            {
+                Debug.WriteLine("No video device found.");
+            }
+        }
+
+        private void videoDevice1ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            turnOnAForgeDevice(0);
+        }
+        private void videoDevice2ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            turnOnAForgeDevice(1);
+        }
+        private void videoDevice3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            turnOnAForgeDevice(2);
         }
 
         private void turnOffCameraMode()
         {
-            devices[0].Stop();
-            timer1.Enabled = false;
+            if (webcamMode == 1)
+            {
+                devices[0].Stop();
+                timer1.Enabled = false;
+            }
+            else if (webcamMode == 2)
+            {
+                if (videoSource != null && videoSource.IsRunning)
+                {
+                    videoSource.SignalToStop();
+                    videoSource.WaitForStop();
+                }
+            }
+
             pictureBox1.Image = null;
-            webcamMode = false;
+            webcamMode = 0;
+        }
+        private void offToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            turnOffCameraMode();
         }
 
         private void grayToolStripMenuItem_Click(object sender, EventArgs e)
@@ -287,34 +502,79 @@ namespace Image_Processing
             webcamFilter = filter.MirrorHorizontal;
             timer1.Enabled = true;
         }
-
         private void mirrorVerticalToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             webcamFilter = filter.MirrorVertical;
             timer1.Enabled = true;
         }
-
         private void histogramToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             webcamFilter = filter.Histogram;
             timer1.Enabled = true;
         }
-
         private void scaleToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             webcamFilter = filter.Scale;
             timer1.Enabled = true;
         }
-
         private void binaryToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             webcamFilter = filter.Binary;
             timer1.Enabled = true;
         }
-
         private void sepiaToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             webcamFilter = filter.Sepia;
+            timer1.Enabled = true;
+        }
+        private void smoothingToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Smoothing;
+            timer1.Enabled = true;
+        }
+        private void gaussianBlurToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.GaussianBlur;
+            timer1.Enabled = true;
+        }
+        private void sharpenToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.Sharpen;
+            timer1.Enabled = true;
+        }
+        private void meanRemovalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.MeanRemoval;
+            timer1.Enabled = true;
+        }
+        private void laplascianToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossLaplascian;
+            timer1.Enabled = true;
+        }
+        private void horizontalVerticalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossHoriVerti;
+            timer1.Enabled = true;
+        }
+        private void allDirectionsToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossAllDirection;
+            timer1.Enabled = true;
+        }
+        private void lossyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossLossy;
+            timer1.Enabled = true;
+        }
+        private void horizontalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossHorizontal;
+            timer1.Enabled = true;
+        }
+        private void verticalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            webcamFilter = filter.EmbossVertical;
             timer1.Enabled = true;
         }
         private void timer1_Tick(object sender, EventArgs e)
@@ -368,14 +628,51 @@ namespace Image_Processing
                     BasicDIP.Subtract(b, background, ref result);
                     pictureBox3.Image = result;
                     return;
+                case filter.Smoothing:
+                    BasicDIP.Smoothing(b, ref processed);
+                    break;
+                case filter.GaussianBlur:
+                    BasicDIP.GaussianBlur(b, ref processed);
+                    break;
+                case filter.Sharpen:
+                    BasicDIP.Sharpen(b, ref processed);
+                    break;
+                case filter.MeanRemoval:
+                    BasicDIP.MeanRemoval(b, ref processed);
+                    break;
+                case filter.EmbossLaplascian:
+                    BasicDIP.EmbossLaplascian(b, ref processed);
+                    break;
+                case filter.EmbossHoriVerti:
+                    BasicDIP.EmbossHoriVerti(b, ref processed);
+                    break;
+                case filter.EmbossAllDirection:
+                    BasicDIP.EmbossAllDirections(b, ref processed);
+                    break;
+                case filter.EmbossLossy:
+                    BasicDIP.EmbossLossy(b, ref processed);
+                    break;
+                case filter.EmbossHorizontal:
+                    BasicDIP.EmbossHorizontal(b, ref processed);
+                    break;
+                case filter.EmbossVertical:
+                    BasicDIP.EmbossVertical(b, ref processed);
+                    break;
                 default:
                     break;
             }
             pictureBox2.Image = processed;
 
         }
-
         private Bitmap getOneFrame()
+        {
+            if (webcamMode == 1)
+                return getOneFrameDevice();
+            if (webcamMode == 2)
+                return getOneFrameAForge();
+            return null;
+        }
+        private Bitmap getOneFrameDevice()
         {
             // Implicit Data can be any type of data (object or primitive type)
             IDataObject data;
@@ -391,11 +688,19 @@ namespace Image_Processing
             }
             return new Bitmap(bmap);
         }
+        private Bitmap getOneFrameAForge()
+        {
+            if (pictureBox1.Image == null)
+            {
+                return null;
+            }
+            return new Bitmap(pictureBox1.Image);
+        }
 
         //Open file to picturebox1
-        private void button1_Click(object sender, EventArgs e)
+        private void loadImageBtn_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 turnOffCameraMode();
             }
@@ -418,14 +723,16 @@ namespace Image_Processing
         }
 
         //Subtract button
-        private void button3_Click(object sender, EventArgs e)
+        private void subtractBtn_Click(object sender, EventArgs e)
         {
-            if (webcamMode)
+            if (webcamMode != 0)
             {
                 webcamFilter = filter.Subtract;
                 timer1.Enabled = true;
                 return;
             }
+            else if (pictureBox1.Image == null)
+                return;
             Bitmap image = new Bitmap(pictureBox1.Image);
             Bitmap background = new Bitmap(pictureBox2.Image);
             Bitmap result = new Bitmap(background.Width, background.Height);
@@ -448,5 +755,7 @@ namespace Image_Processing
                 pictureBox2.Image.Save(saveFileDialog3.FileName);
             }
         }
+
+        
     }
 }
